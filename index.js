@@ -23,7 +23,15 @@ app.post('/login', (req, res) => {
 })
 
 app.post('/register', (req, res) => {
+    const { firstName, lastName, email, password, repassword } = req.body
+    console.log("Register Info Received: ", firstName, lastName, email, password, repassword)
 
+    if(firstName && lastName && email && password && repassword){
+        res.status(200).json({message:"Register Successful"})
+        console.log("Register Successful")
+    }else{
+        res.status(200).json({message:"Login Failed"})
+    }
 })
 
 app.listen(port, () => {
