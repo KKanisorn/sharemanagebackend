@@ -3,7 +3,7 @@ const app = express()
 const cors = require('cors');
 const port = 5000
 
-const { connectDatabase, insertNewMember, checkDuplicate } = require('./database');
+const { connectDatabase, insertNewMember, checkDuplicate, verifyPassword } = require('./database');
 
 app.use(cors());
 app.use(express.json());
@@ -20,26 +20,27 @@ app.post('/login', async (req, res) => {
     console.log("Login Info Received: ", emailOrUsername, password)
 
     try {
-        const { isDuplicate, results } = await checkDuplicate("member", "Email", email)
-        console.log("Duplicate is: ", isDuplicate)
+        const { isDuplicate, results } = await checkDuplicate("member", "Email", emailOrUsername)
         if (isDuplicate) {
-
+            if(verifyPassword(password, results[0]["Password"])) {
+                res.status(200).json({message: "Login Successful"})
+            }
+            else{
+                res.status(200).json({message: "Login Failed"})
+            }
+        }else{
+            res.status(200).json({message: "Login Failed"})
         }
     } catch (e) {
         console.error("Error checkDuplicate: ", e)
     }
 
-    if (emailOrUsername && password) {
-        res.status(200).json({message: "Login Successful"})
-    } else {
-        res.status(200).json({message: "Login Failed"})
-    }
+
 })
 
 app.post('/register', async (req, res) => {
     const {firstName, lastName, email, password, repassword} = req.body
     console.log("Register Info Received: ", firstName, lastName, email, password, repassword)
-    console.log("Email is: ", email)
 
     try {
         const isDuplicate = await checkDuplicate("member", "Email", email)

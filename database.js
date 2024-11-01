@@ -57,7 +57,7 @@ function checkDuplicate(table, column, value) {
                 return reject(err);
             }
             if (results.length > 0) {
-                console.log("Duplicate found:", results[0]["Email"]);
+                console.log("Duplicate found:", results);
                 resolve({ isDuplicate: true, results: results });
             } else {
                 console.log("No duplicate found");
@@ -75,4 +75,4 @@ async function verifyPassword(inputPassword, hashedPassword) {
 
 
 
-module.exports = { connectDatabase, insertNewMember, checkDuplicate};
+module.exports = { connectDatabase, insertNewMember, checkDuplicate, verifyPassword};
