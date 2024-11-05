@@ -71,9 +71,9 @@ app.post('/register', async (req, res) => {
     }catch (e){
         console.error("Error checkDuplicate: ", e)
     }
-
-
 })
+
+
 
 app.get("/dashboard", (req, res) => {
   return res.status(200).json({message:"Dashboard"})
