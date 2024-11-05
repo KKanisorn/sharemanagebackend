@@ -67,6 +67,20 @@ function checkDuplicate(table, column, value) {
     });
 }
 
+// In your database.js or where `getName` is defined
+async function getName(table, email) {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT Name FROM ${table} WHERE Email = ?`;
+
+        con.query(query, [email], (error, results) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(results[0]); // Assuming results is an array and Name is in the first object
+        });
+    });
+}
+
 async function verifyPassword(inputPassword, hashedPassword) {
     const isMatch = await bcrypt.compare(inputPassword, hashedPassword);
     return isMatch;
@@ -75,4 +89,4 @@ async function verifyPassword(inputPassword, hashedPassword) {
 
 
 
-module.exports = { connectDatabase, insertNewMember, checkDuplicate, verifyPassword};
+module.exports = { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName};

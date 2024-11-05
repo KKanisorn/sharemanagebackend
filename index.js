@@ -3,7 +3,7 @@ const app = express()
 const cors = require('cors');
 const port = 5000
 
-const { connectDatabase, insertNewMember, checkDuplicate, verifyPassword } = require('./database');
+const { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName } = require('./database');
 
 app.use(cors());
 app.use(express.json());
@@ -13,6 +13,26 @@ const SECRET = "your_secret_key";
 
 connectDatabase();
 
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1] // Expecting "Bearer <token>"
+
+    console.log(token);
+    // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYW5pc29ybmtoZXRraHVlYW5AZ21haWwuY29tIiwiaWF0IjoxNzMwODE3MzAyLCJleHAiOjE3MzA4MjA5MDJ9.3Fp7mnMXrSFS-_M0Te4AI9ldm7R-ecT4bWdnxYFSHt0
+
+    // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYW5pc29ybmtoZXRraHVlYW5AZ21haWwuY29tIiwiaWF0IjoxNzMwODEyNjgxLCJleHAiOjE3MzA4MTYyODF9.Lx8NGQajj6beKFhbeHwGdffMUiL67n_jj06Eq40vfEs
+    if (!token) return res.status(401).json({ message: 'Access Denied' });
+
+    jwt.verify(token, SECRET, (err, user) => {
+        if (err) {
+            console.log("Invaild Token")
+            return res.status(403).json({message: 'Invalid Token'});
+        }
+        console.log("JWT PASSED")
+        req.user = user; // Save decoded token data to request
+        next(); // Pass control to the next handler
+    });
+}
 
 app.get('/', (req, res) => {
     res.send('Hello World!')
@@ -75,9 +95,27 @@ app.post('/register', async (req, res) => {
 
 
 
-app.get("/dashboard", (req, res) => {
-  return res.status(200).json({message:"Dashboard"})
-})
+app.get("/getname/:email", authenticateToken, async (req, res) => {
+    const email = req.params.email; // Access email directly
+    console.log("Email is: ",email)
+
+    try {
+        // Assuming getName is asynchronous and returns an object like { Name: "User's Name" }
+        const result = await getName("member", email);
+        const name = result ? result.Name : null;
+
+        if (name) {
+            console.log("Name is: ", name);
+            return res.json({ name });
+        } else {
+            console.log("User not found: ")
+            return res.status(404).json({ message: "User not found" });
+        }
+    } catch (error) {
+        console.error("Error during getName:", error);
+        return res.status(500).json({ message: "Error retrieving name" });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
