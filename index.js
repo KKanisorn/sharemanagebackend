@@ -23,7 +23,7 @@ function authenticateToken(req, res, next) {
     // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYW5pc29ybmtoZXRraHVlYW5AZ21haWwuY29tIiwiaWF0IjoxNzMwODEyNjgxLCJleHAiOjE3MzA4MTYyODF9.Lx8NGQajj6beKFhbeHwGdffMUiL67n_jj06Eq40vfEs
     if (!token) return res.status(401).json({ message: 'Access Denied' });
 
-    jwt.verify(token, SECRET, (err, user) => {
+    jwt.verify(token, SECRET, { expiresIn: '2h' },(err, user) => {
         if (err) {
             console.log("Invaild Token")
             return res.status(403).json({message: 'Invalid Token'});
