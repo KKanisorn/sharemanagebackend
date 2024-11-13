@@ -86,6 +86,13 @@ async function verifyPassword(inputPassword, hashedPassword) {
     return isMatch;
 }
 
+async function insertStairGroup(table, houseName, groupName, principalAmount, handsReceived, totalHands, days, perHandAmount, handsDeducted, handsSent, maintenanceFee, startDate, email){
+
+
+
+
+
+}
 
 
 

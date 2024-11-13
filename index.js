@@ -117,6 +117,32 @@ app.get("/getname/:email", authenticateToken, async (req, res) => {
     }
 });
 
+app.post("/addStairGroup", authenticateToken, async (req, res) => {
+    const {
+        houseName,
+        groupName,
+        principalAmount,
+        handsReceived,
+        totalHands,
+        days,
+        perHandAmount,
+        handsDeducted,
+        handsSent,
+        maintenanceFee,
+        startDate,
+        email
+    } = req.body;
+
+
+    // console.log(houseName ? houseName.trim() : 'houseName is null or undefined');
+    if (!houseName || !groupName || !principalAmount || !startDate) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+    console.log(req.body);
+    // console.log(houseName)
+    res.status(200).json({ message: "Group added successfully", data: req.body });
+})
+
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
 })
