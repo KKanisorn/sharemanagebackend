@@ -88,7 +88,7 @@ async function verifyPassword(inputPassword, hashedPassword) {
 
 async function insertStairGroup(houseName, groupName, principalAmount, handsReceived, totalHands, days, perHandAmount, handsDeducted, handsSent, maintenanceFee, startDate, email){
 
-    const sql = "INSERT INTO share (Email, HouseName, FundCircle, Principle, Position, TotalPrinciple, TotalDay, Payment, Deduction, PaidInstallments, UnpaidInstallments, TotalPaidAmount, RemainingPayments, Profit, MaintenanceFee, StartDate, ReceiveDate, EndDate) values (?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+    const sql = "INSERT INTO share (Email, HouseName, FundCircle, Principle, Position, TotalPrinciple, TotalDay, Payment, Deduction, PaidInstallments, UnpaidInstallments, TotalPaidAmount, RemainingPayments, Profit, MaintenanceFee, StartDate, ReceiveDate, EndDate, isEnd) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
 
     const UnpaidInstallments = totalHands - handsSent;
@@ -97,15 +97,27 @@ async function insertStairGroup(houseName, groupName, principalAmount, handsRece
     const profit = principalAmount - (perHandAmount * totalHands) - maintenanceFee;
     let ReceiveDate;
     let EndDate = new Date(startDate)
+    let Today = new Date();
+    let isEnd = false;
 
-    console.log(profit)
+    startDate = startDate.toISOString().split('T')[0]
+
+    // console.log(profit)
     ReceiveDate = calculateReceiveDate(days, totalHands, handsReceived, startDate)
-    console.log("ReceiveDate is :",ReceiveDate)
+    // console.log("ReceiveDate is :",ReceiveDate)
     EndDate = calculateEndDate(days, totalHands, startDate)
-    console.log("EndDate is :",EndDate)
+    // console.log("EndDate is :",EndDate)
+
+    Today = Today.toISOString().split('T')[0]
+
+    if(Today > EndDate){
+        isEnd = true;
+    }
+
+
 
     try{
-        con.query(sql, [email, houseName, groupName, principalAmount, handsReceived, totalHands, days, perHandAmount, handsDeducted, handsSent, UnpaidInstallments, totalPaidAmount,remainingPayments,  profit, maintenanceFee, startDate, ReceiveDate, EndDate],
+        con.query(sql, [email, houseName, groupName, principalAmount, handsReceived, totalHands, days, perHandAmount, handsDeducted, handsSent, UnpaidInstallments, totalPaidAmount,remainingPayments,  profit, maintenanceFee, startDate, ReceiveDate, EndDate, isEnd],
             (err, result) => {
                 if (err) {
                     console.error("Error while inserting share: ", err);
@@ -157,9 +169,36 @@ function calculateEndDate(days, totalHands, startDate){
     EndDate = EndDate.toISOString().split('T')[0]
 
     return EndDate
+}
+
+function getShareStairIfPayToday(Email){
+
+    return new Promise((resolve, reject) =>{
+        const query = "SELECT * FROM share WHERE EMAIL = ? AND isEnd = false"
+
+        con.query(query, [Email], (err, results) =>{
+            if(err){
+                console.log("Error while query Get Share Stair")
+                return reject(err)
+            }
+            const formattedResults = results.map(result => {
+                return {
+                    ...result,
+                    StartDate: result.StartDate.toISOString().split('T')[0], // Format date as YYYY-MM-DD
+                    ReceiveDate: result.ReceiveDate.toISOString().split('T')[0],
+                    EndDate: result.EndDate.toISOString().split('T')[0]
+                };
+            });
+
+            console.log("Formatted Share results:", formattedResults);
+            resolve(formattedResults); // Resolve with formatted results
+
+        })
+
+    })
 
 }
 
 
 
-module.exports = { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName, insertStairGroup};
+module.exports = { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName, insertStairGroup, getShareStairIfPayToday};

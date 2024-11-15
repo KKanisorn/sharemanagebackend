@@ -3,7 +3,7 @@ const app = express()
 const cors = require('cors');
 const port = 5000
 
-const { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName, insertStairGroup } = require('./database');
+const { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName, insertStairGroup, getShareStairIfPayToday } = require('./database');
 
 app.use(cors());
 app.use(express.json());
@@ -22,7 +22,7 @@ function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1] // Expecting "Bearer <token>"
 
-    console.log(token);
+    // console.log(token);
     // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYW5pc29ybmtoZXRraHVlYW5AZ21haWwuY29tIiwiaWF0IjoxNzMwODE3MzAyLCJleHAiOjE3MzA4MjA5MDJ9.3Fp7mnMXrSFS-_M0Te4AI9ldm7R-ecT4bWdnxYFSHt0
 
     // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYW5pc29ybmtoZXRraHVlYW5AZ21haWwuY29tIiwiaWF0IjoxNzMwODEyNjgxLCJleHAiOjE3MzA4MTYyODF9.Lx8NGQajj6beKFhbeHwGdffMUiL67n_jj06Eq40vfEs
@@ -56,7 +56,7 @@ app.post('/login', async (req, res) => {
                     sub: emailOrUsername,
                     iat: Math.floor(Date.now() / 1000),
                 };
-                const token = jwt.sign(payload, SECRET, { expiresIn: '1h' }); // Set an expiration as needed, e.g., 1 hour
+                const token = jwt.sign(payload, SECRET, { expiresIn: '24h' }); // Set an expiration as needed, e.g., 1 hour
                 res.send({ token });
                 // res.status(200).json({message: "Login Successful"})
            }
@@ -102,7 +102,7 @@ app.post('/register', async (req, res) => {
 
 app.get("/getname/:email", authenticateToken, async (req, res) => {
     const email = req.params.email; // Access email directly
-    console.log("Email is: ",email)
+    // console.log("Email is: ",email)
 
     try {
         // Assuming getName is asynchronous and returns an object like { Name: "User's Name" }
@@ -110,7 +110,7 @@ app.get("/getname/:email", authenticateToken, async (req, res) => {
         const name = result ? result.Name : null;
 
         if (name) {
-            console.log("Name is: ", name);
+            // console.log("Name is: ", name);
             return res.json({ name });
         } else {
             console.log("User not found: ")
@@ -150,6 +150,16 @@ app.post("/addStairGroup", authenticateToken, async (req, res) => {
 
     // console.log(houseName)
     res.status(200).json({ message: "Group added successfully", data: req.body });
+})
+
+app.get("/getShareStairIfPay/:email", authenticateToken, async (req, res) =>{
+    const email = req.params.email;
+    console.log("Email is :", email)
+
+    const result = await getShareStairIfPayToday(email)
+    console.log("Result is:", result)
+
+    res.json({message:"Hello World"})
 })
 
 app.listen(port, () => {
