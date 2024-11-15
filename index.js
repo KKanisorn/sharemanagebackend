@@ -3,7 +3,7 @@ const app = express()
 const cors = require('cors');
 const port = 5000
 
-const { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName } = require('./database');
+const { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName, insertStairGroup } = require('./database');
 
 app.use(cors());
 app.use(express.json());
@@ -11,7 +11,12 @@ app.use(express.json());
 const jwt = require('jsonwebtoken');
 const SECRET = "your_secret_key";
 
-connectDatabase();
+try{
+    connectDatabase();
+}
+catch(error){
+    console.log(error)
+}
 
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
@@ -23,7 +28,7 @@ function authenticateToken(req, res, next) {
     // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYW5pc29ybmtoZXRraHVlYW5AZ21haWwuY29tIiwiaWF0IjoxNzMwODEyNjgxLCJleHAiOjE3MzA4MTYyODF9.Lx8NGQajj6beKFhbeHwGdffMUiL67n_jj06Eq40vfEs
     if (!token) return res.status(401).json({ message: 'Access Denied' });
 
-    jwt.verify(token, SECRET, { expiresIn: '2h' },(err, user) => {
+    jwt.verify(token, SECRET, { expiresIn: '24h' },(err, user) => {
         if (err) {
             console.log("Invaild Token")
             return res.status(403).json({message: 'Invalid Token'});
@@ -139,6 +144,10 @@ app.post("/addStairGroup", authenticateToken, async (req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
     }
     console.log(req.body);
+
+    await insertStairGroup(houseName, groupName, principalAmount, handsReceived, totalHands, days, perHandAmount, handsDeducted, handsSent, maintenanceFee, startDate, email)
+
+
     // console.log(houseName)
     res.status(200).json({ message: "Group added successfully", data: req.body });
 })

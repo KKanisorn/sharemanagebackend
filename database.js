@@ -86,14 +86,80 @@ async function verifyPassword(inputPassword, hashedPassword) {
     return isMatch;
 }
 
-async function insertStairGroup(table, houseName, groupName, principalAmount, handsReceived, totalHands, days, perHandAmount, handsDeducted, handsSent, maintenanceFee, startDate, email){
+async function insertStairGroup(houseName, groupName, principalAmount, handsReceived, totalHands, days, perHandAmount, handsDeducted, handsSent, maintenanceFee, startDate, email){
+
+    const sql = "INSERT INTO share (Email, HouseName, FundCircle, Principle, Position, TotalPrinciple, TotalDay, Payment, Deduction, PaidInstallments, UnpaidInstallments, TotalPaidAmount, RemainingPayments, Profit, MaintenanceFee, StartDate, ReceiveDate, EndDate) values (?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
 
+    const UnpaidInstallments = totalHands - handsSent;
+    const totalPaidAmount = handsSent * perHandAmount;
+    const remainingPayments = perHandAmount * UnpaidInstallments;
+    const profit = principalAmount - (perHandAmount * totalHands) - maintenanceFee;
+    let ReceiveDate;
+    let EndDate = new Date(startDate)
 
+    console.log(profit)
+    ReceiveDate = calculateReceiveDate(days, totalHands, handsReceived, startDate)
+    console.log("ReceiveDate is :",ReceiveDate)
+    EndDate = calculateEndDate(days, totalHands, startDate)
+    console.log("EndDate is :",EndDate)
 
+    try{
+        con.query(sql, [email, houseName, groupName, principalAmount, handsReceived, totalHands, days, perHandAmount, handsDeducted, handsSent, UnpaidInstallments, totalPaidAmount,remainingPayments,  profit, maintenanceFee, startDate, ReceiveDate, EndDate],
+            (err, result) => {
+                if (err) {
+                    console.error("Error while inserting share: ", err);
+                } else {
+                    console.log("Successfully added share:", result);
+                }
+            }
+        );
+    }
+    catch (error){
+        console.error(error);
+    }
+
+}
+
+function calculateReceiveDate(days, totalHands, handsReceived, startDate) {
+    let ReceiveDate = new Date(startDate);
+    if(days > totalHands){
+        // console.log(days/totalHands);
+        ReceiveDate.setDate(ReceiveDate.getDate()+(days/totalHands*handsReceived -(days/totalHands)))
+        // ReceiveDate = ReceiveDate.toISOString().split('T')[0]
+        // console.log(ReceiveDate)
+    }
+    else{
+
+        // console.log(totalHands/days*handsReceived)
+        ReceiveDate.setDate(ReceiveDate.getDate()+(totalHands/days*handsReceived -(totalHands/days)))
+        // console.log(ReceiveDate)
+    }
+    ReceiveDate = ReceiveDate.toISOString().split('T')[0]
+
+    return ReceiveDate
+}
+
+function calculateEndDate(days, totalHands, startDate){
+    let EndDate = new Date(startDate);
+    if(days > totalHands){
+        // console.log(days/totalHands);
+        EndDate.setDate(EndDate.getDate()+(days/totalHands*totalHands -(days/totalHands)))
+        // ReceiveDate = ReceiveDate.toISOString().split('T')[0]
+        // console.log(ReceiveDate)
+    }
+    else{
+
+        // console.log(totalHands/days*handsReceived)
+        EndDate.setDate(EndDate.getDate()+(totalHands/days*totalHands -(totalHands/days)))
+        // console.log(ReceiveDate)
+    }
+    EndDate = EndDate.toISOString().split('T')[0]
+
+    return EndDate
 
 }
 
 
 
-module.exports = { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName};
+module.exports = { connectDatabase, insertNewMember, checkDuplicate, verifyPassword, getName, insertStairGroup};
