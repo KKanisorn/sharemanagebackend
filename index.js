@@ -159,7 +159,7 @@ app.get("/getShareStairIfPay/:email", authenticateToken, async (req, res) =>{
     const result = await getShareStairIfPayToday(email)
     console.log("Result is:", result)
 
-    res.json({message:"Hello World"})
+    res.json(result)
 })
 
 app.listen(port, () => {

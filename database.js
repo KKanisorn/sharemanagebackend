@@ -96,11 +96,12 @@ async function insertStairGroup(houseName, groupName, principalAmount, handsRece
     const remainingPayments = perHandAmount * UnpaidInstallments;
     const profit = principalAmount - (perHandAmount * totalHands) - maintenanceFee;
     let ReceiveDate;
+    // let startDate = new Date(startDate)
     let EndDate = new Date(startDate)
     let Today = new Date();
     let isEnd = false;
 
-    startDate = startDate.toISOString().split('T')[0]
+    // startDate = startDate.toISOString().split('T')[0]
 
     // console.log(profit)
     ReceiveDate = calculateReceiveDate(days, totalHands, handsReceived, startDate)
@@ -174,25 +175,34 @@ function calculateEndDate(days, totalHands, startDate){
 function getShareStairIfPayToday(Email){
 
     return new Promise((resolve, reject) =>{
-        const query = "SELECT * FROM share WHERE EMAIL = ? AND isEnd = false"
+        // const query = "SELECT DISTINCT HouseName FROM share WHERE EMAIL = ? AND isEnd = false"
 
+        const query = "SELECT *,\n" +
+            "    CASE\n" +
+            "        WHEN TotalPrinciple < TotalDay\n" +
+            "            THEN DATE_ADD(StartDate, INTERVAL ((TotalDay / TotalPrinciple) * PaidInstallments - 1) DAY)\n" +
+            "        ELSE DATE_ADD(StartDate, INTERVAL ((TotalPrinciple / TotalDay) * PaidInstallments + 1) DAY)\n" +
+            "    END AS CalculatedDate\n" +
+            "FROM share\n" +
+            "WHERE Email = 'kanisornkhetkhuean@gmail.com' AND isEnd = false\n" +
+            "HAVING CalculatedDate = CURRENT_DATE()+1;"
         con.query(query, [Email], (err, results) =>{
             if(err){
                 console.log("Error while query Get Share Stair")
                 return reject(err)
             }
-            const formattedResults = results.map(result => {
-                return {
-                    ...result,
-                    StartDate: result.StartDate.toISOString().split('T')[0], // Format date as YYYY-MM-DD
-                    ReceiveDate: result.ReceiveDate.toISOString().split('T')[0],
-                    EndDate: result.EndDate.toISOString().split('T')[0]
-                };
-            });
+            // const formattedResults = results.map(result => {
+            //     return {
+            //         ...result,
+            //         StartDate: result.StartDate.toISOString().split('T')[0], // Format date as YYYY-MM-DD
+            //         ReceiveDate: result.ReceiveDate.toISOString().split('T')[0],
+            //         EndDate: result.EndDate.toISOString().split('T')[0]
+            //     };
+            // });
 
-            console.log("Formatted Share results:", formattedResults);
-            resolve(formattedResults); // Resolve with formatted results
-
+            // console.log("Formatted Share results:", formattedResults);
+            // resolve(formattedResults); // Resolve with formatted results
+            resolve(results)
         })
 
     })
